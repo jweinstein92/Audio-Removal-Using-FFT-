@@ -23,7 +23,7 @@
 /* #undef HAVE_ALSA_ASOUNDLIB_H */
 
 /* Define to 1 if you have the <byteswap.h> header file. */
-/* #undef HAVE_BYTESWAP_H */
+#define HAVE_BYTESWAP_H 1
 
 /* Define to 1 if you have the `calloc' function. */
 #define HAVE_CALLOC 1
@@ -38,7 +38,7 @@
 #define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <endian.h> header file. */
-/* #undef HAVE_ENDIAN_H */
+#define HAVE_ENDIAN_H 1
 
 /* Will be set to 1 if flac, ogg and vorbis are available. */
 #define HAVE_EXTERNAL_LIBS 0
@@ -186,7 +186,7 @@
 /* #undef NO_MINUS_C_MINUS_O */
 
 /* Set to 1 if compiling for MacOSX */
-#define OS_IS_MACOSX 1
+#define OS_IS_MACOSX 0
 
 /* Set to 1 if compiling for Win32 */
 #define OS_IS_WIN32 0

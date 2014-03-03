@@ -55,18 +55,18 @@ main (int argc, char **argv)
 		} ;
 
 	/* A couple of standard WAV files. Make sure Win32 plays these. */
-	// encode_file (argv [1], "pcmu8.wav"	, SF_FORMAT_WAV | SF_FORMAT_PCM_U8) ;
+	encode_file (argv [1], "pcmu8.wav"	, SF_FORMAT_WAV | SF_FORMAT_PCM_U8) ;
 	encode_file (argv [1], "pcm16.wav"	, SF_FORMAT_WAV | SF_FORMAT_PCM_16) ;
-	// encode_file (argv [1], "imaadpcm.wav", SF_FORMAT_WAV | SF_FORMAT_MS_ADPCM) ;
-	// encode_file (argv [1], "msadpcm.wav", SF_FORMAT_WAV | SF_FORMAT_IMA_ADPCM) ;
-	// encode_file (argv [1], "gsm610.wav"	, SF_FORMAT_WAV | SF_FORMAT_GSM610) ;
+	encode_file (argv [1], "imaadpcm.wav", SF_FORMAT_WAV | SF_FORMAT_MS_ADPCM) ;
+	encode_file (argv [1], "msadpcm.wav", SF_FORMAT_WAV | SF_FORMAT_IMA_ADPCM) ;
+	encode_file (argv [1], "gsm610.wav"	, SF_FORMAT_WAV | SF_FORMAT_GSM610) ;
 
-	// /* Soundforge W64. */
-	// encode_file (argv [1], "pcmu8.w64"	, SF_FORMAT_W64 | SF_FORMAT_PCM_U8) ;
-	// encode_file (argv [1], "pcm16.w64"	, SF_FORMAT_W64 | SF_FORMAT_PCM_16) ;
-	// encode_file (argv [1], "imaadpcm.w64", SF_FORMAT_W64 | SF_FORMAT_MS_ADPCM) ;
-	// encode_file (argv [1], "msadpcm.w64", SF_FORMAT_W64 | SF_FORMAT_IMA_ADPCM) ;
-	// encode_file (argv [1], "gsm610.w64"	, SF_FORMAT_W64 | SF_FORMAT_GSM610) ;
+	/* Soundforge W64. */
+	encode_file (argv [1], "pcmu8.w64"	, SF_FORMAT_W64 | SF_FORMAT_PCM_U8) ;
+	encode_file (argv [1], "pcm16.w64"	, SF_FORMAT_W64 | SF_FORMAT_PCM_16) ;
+	encode_file (argv [1], "imaadpcm.w64", SF_FORMAT_W64 | SF_FORMAT_MS_ADPCM) ;
+	encode_file (argv [1], "msadpcm.w64", SF_FORMAT_W64 | SF_FORMAT_IMA_ADPCM) ;
+	encode_file (argv [1], "gsm610.w64"	, SF_FORMAT_W64 | SF_FORMAT_GSM610) ;
 
 	return 0 ;
 } /* main */

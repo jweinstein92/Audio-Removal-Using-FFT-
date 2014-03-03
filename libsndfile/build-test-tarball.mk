@@ -8,7 +8,7 @@ EXEEXT =
 
 PACKAGE_VERSION = 1.0.25
 
-HOST_TRIPLET = i386-apple-darwin13.0.0
+HOST_TRIPLET = x86_64-unknown-linux-gnu
 
 LIB_VERSION := $(shell echo $(PACKAGE_VERSION) | sed -e 's/[a-z].*//')
 

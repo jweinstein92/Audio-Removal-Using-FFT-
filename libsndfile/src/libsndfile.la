@@ -5,16 +5,16 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='libsndfile.1.dylib'
+dlname='libsndfile.so.1'
 
 # Names of this library.
-library_names='libsndfile.1.dylib libsndfile.dylib'
+library_names='libsndfile.so.1.0.25 libsndfile.so.1 libsndfile.so'
 
 # The name of the static archive.
 old_library='libsndfile.a'
 
 # Linker flags that can not go in dependency_libs.
-inherited_linker_flags=' '
+inherited_linker_flags=''
 
 # Libraries that this one depends upon.
 dependency_libs=' -lm'
@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/usr/local/lib'
+libdir='/home/jmw397/lib'

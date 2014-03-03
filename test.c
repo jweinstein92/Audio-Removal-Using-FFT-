@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "sndfile.h"
+#include "libsndfile/src/sndfile.h"
 
 int main(int argc, char *argv[]) {
 	printf("Wav Read Test\n");
