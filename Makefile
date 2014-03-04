@@ -5,3 +5,4 @@ test:
 
 run-test:
 	LD_LIBRARY_PATH=$(HOME)/lib ./test 2013-09-19-sysk-dying.wav
+	rm test

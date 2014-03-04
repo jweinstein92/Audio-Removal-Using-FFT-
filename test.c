@@ -53,9 +53,26 @@ int main(int argc, char *argv[]) {
 	//Output info
 	printf("Read %f frames from %s, Sample rate: %d, Length: %fs\n",
     	numFrames, argv[1], sndInfo.samplerate, (float)numFrames/sndInfo.samplerate);
-
 	sf_close(sndFile);
-   	free(buffer);
+  
+	//Write the data
+	printf("Writing copy\n");
+	SNDFILE* outfile;
+	SF_INFO tmp;
+	tmp.samplerate = sndInfo.samplerate;
+	tmp.channels = sndInfo.channels;
+	tmp.format = sndInfo.format;
+
+	//Open output file
+	outfile = sf_open("output.wav", SFM_WRITE,  &tmp);
+	if (outfile == NULL) {
+		printf("Not able to open output file\n");
+		sf_perror(NULL);
+		return 1;
+	}
+	sf_write_float(outfile, buffer, sndInfo.frames);
+	
+	free(buffer);
 
    return 0;
 }
