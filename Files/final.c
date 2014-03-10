@@ -121,46 +121,6 @@ int main(int argc, char *argv[]) {
 	int corrLength = mainInfo.frames - sampleInfo.frames + 1;
 	int lenCon = pow(2, ceil(log2(mainInfo.frames + sampleInfo.frames - 1)));
 
-	//Calculate ryy0
-	int nPoint = 2 * sampleInfo.frames - 1;
-	double* ryy = malloc(nPoint * sizeof(double));
-	
-	printf("Calculating FFT ryy\n");
-	fftw_complex* fftw_ryy = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-	memset(fftw_ryy, 0, nPoint * sizeof(fftw_complex));
-	fftw_plan plan1 = fftw_plan_dft_r2c_1d(nPoint, sample_array, fftw_ryy, FFTW_ESTIMATE);
-	fftw_execute(plan1);
-	fftw_destroy_plan(plan1);
-
-	//Take the complex conjugate of the complex array fftw_ryy
-	printf("Calculating the complex conjugate ryy\n");
-	fftw_complex* ryyConjugate = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-	memset(ryyConjugate, 0, nPoint * sizeof(fftw_complex));
-	int i;
-	for (i = 0; i < nPoint; i++) {
-		ryyConjugate[i][0] = fftw_ryy[i][0];
-		ryyConjugate[i][1] = (-1) * fftw_ryy[i][1];
-	}
-
-	//Array multiplication between the FFT and conjugate of FFT.
-	printf("Complex array multiplication ryy\n");
-	fftw_complex* final_ryy = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-	memset(final_ryy, 0, nPoint * sizeof(fftw_complex));
-	int j;
-	for (j = 0; j < nPoint; j++) {
-		final_ryy[j][0] = fftw_ryy[j][0] * ryyConjugate[j][0] - fftw_ryy[j][1] * ryyConjugate[j][1];
-		final_ryy[j][1] = fftw_ryy[j][0] * ryyConjugate[j][1] + fftw_ryy[j][1] * ryyConjugate[j][0];
-	}
-
-	//Take the inverse FFT and store in ryy.
-	printf("Calculating inverse FFT ryy\n");
-	fftw_plan plan2 = fftw_plan_dft_c2r_1d(nPoint, final_ryy, ryy, FFTW_ESTIMATE);
-	fftw_execute(plan2);
-	fftw_destroy_plan(plan2);
-
-	double ryy0 = round(ryy[0]);
-	
-
 	//Calculate the normalized cross correlation.
 	printf("Calculate normalized cross correlation\n");
 	double* x_pad = malloc(lenCon * sizeof(double));
@@ -168,6 +128,7 @@ int main(int argc, char *argv[]) {
 	double* y_pad = malloc(lenCon * sizeof(double));
 	memset(y_pad, 0, lenCon * sizeof(double));
 
+	int i;
 	for (i = 0; i < mainInfo.frames; i++) {
 		x_pad[i] = main_array[i];
 	}
@@ -201,6 +162,7 @@ int main(int argc, char *argv[]) {
 	printf("Complex array multiplication X yConjugate\n");
 	fftw_complex* corrArray = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(corrArray, 0, lenCon * sizeof(fftw_complex));
+	int j;
 	for (j = 0; j < lenCon; j++) {
 		corrArray[j][0] = X[j][0] * yConjugate[j][0] - X[j][1] * yConjugate[j][1];
 		corrArray[j][1] = X[j][0] * yConjugate[j][1] + X[j][1] * yConjugate[j][0];
@@ -248,7 +210,6 @@ int main(int argc, char *argv[]) {
 
 	free(main_array);
 	free(sample_array);
-	free(ryy);
 	free(x_pad);
 	free(y_pad);
 	free(corr);
