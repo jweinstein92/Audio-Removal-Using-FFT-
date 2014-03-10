@@ -113,7 +113,9 @@ int main(int argc, char *argv[]) {
 	(double)sample_numFrames/sampleInfo.samplerate);
 	sf_close(sampleFile);
 
-	
+	//For threaded FFTW
+	fftw_init_threads();
+	fftw_plan_with_nthreads(32);
 	
 	//Correlated Length
 	int corrLength = mainInfo.frames - sampleInfo.frames + 1;
@@ -263,7 +265,7 @@ int main(int argc, char *argv[]) {
 	
 	free(main_array);
 	free(sample_array);
-
+	fftw_cleanup_threads();
 
 	//float_array is the array of floating point numbers needed to be used.
 

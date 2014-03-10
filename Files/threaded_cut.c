@@ -113,93 +113,30 @@ int main(int argc, char *argv[]) {
 	(double)sample_numFrames/sampleInfo.samplerate);
 	sf_close(sampleFile);
 
-	
+	//For threaded FFTW
+	fftw_init_threads();
+	fftw_plan_with_nthreads(32);
 	
 	//Correlated Length
 	int corrLength = mainInfo.frames - sampleInfo.frames + 1;
 	int lenCon = pow(2, ceil(log2(mainInfo.frames + sampleInfo.frames - 1)));
 
-	//Calculate rxx0 values
-	double* rxx = malloc(lenCon * sizeof(double));
-	//double* rxx0 = malloc(corrLength * sizeof(double));
-	memset(rxx, 0, lenCon * sizeof(double));
-	//memset(rxx0, 0, corrLength * sizeof(double));
-
-	// subSection represents x(i:(i+length(y)-1)).
-	double* subSection = malloc(sampleInfo.frames * sizeof(double));
-	// nPoint represents 2*length(x) - 1).
-	int nPoint = 2*mainInfo.frames - 1;
-	int i;
-	for (i = 0; i < corrLength; i++) {
-		memcpy(subSection, main_array + i, sampleInfo.frames*sizeof(double));
-		// fftw_1 represents fft(x(i:(i+length(y)-1).
-		printf("Calculating FFT: %d\n", i);
-		fftw_complex* fftw_1 = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));	
-		printf("BLAH\n");
-		memset(fftw_1, 0, nPoint * sizeof(fftw_complex));
-		printf("HELLO\n");
-		fftw_plan plan1 = fftw_plan_dft_r2c_1d(nPoint, subSection, fftw_1,
-		FFTW_ESTIMATE);
-		printf("PLAN\n");
-		fftw_execute(plan1);
-		printf("EXECUTE\n");
-		fftw_destroy_plan(plan1);
-		// fftw_1 now contains the complex data from running fftw on subSection.
-
-		// fftw_2 represents fft(x(i:(i+length(y)-1).
-		//fftw_complex* fftw_2 = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-		//memset(fftw_2, 0, nPoint * sizeof(fftw_complex));
-		//fftw_plan plan2 = fftw_plan_dft_r2c_1d(nPoint, fftw_2, subSection,
-		//FFTW_ESTIMATE);
-		//fftw_execute(plan2);
-		// fftw_2 now contains the complex data from running fftw on subSection.
-	
-
-		// Take the complex conjugate of the complex array fftw_1
-		printf("Calculating the complex conjugate\n");
-		fftw_complex* conjugate = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-		memset(conjugate, 0, nPoint * sizeof(fftw_complex));
-		int j;
-		for (j = 0; j < nPoint; j++) {
-			//conjugate[j] = conj(fftw_2[j]);
-			conjugate[j][0] = fftw_1[j][0];
-			conjugate[j][1] = (-1) * fftw_1[j][1];
-		}
-		
-		//Array multiplication between the FFT and conjugate of FFT.
-		printf("Complex array multiplication\n");
-		fftw_complex* final = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
-		memset(final, 0, nPoint * sizeof(fftw_complex));
-		for (j = 0; j < nPoint; j++) {
-			final[j][0] = fftw_1[j][0] * conjugate[j][0] - fftw_1[j][1] * conjugate[j][1];
-			final[j][1] = fftw_1[j][0] * conjugate[j][1] + fftw_1[j][1] * conjugate[j][0];
-		}
-
-		//Take the inverse FFT and store in rxx.
-		printf("Calculating inverse FFT\n");
-		fftw_plan plan3 = fftw_plan_dft_c2r_1d(nPoint, final, rxx, FFTW_ESTIMATE);
-		fftw_execute(plan3);
-		fftw_destroy_plan(plan3);
-		//rxx0[i] = round(rxx[0]);
-	}
-	
 	//Calculate ryy0
-	nPoint = 2 * sampleInfo.frames - 1;
+	int nPoint = 2 * sampleInfo.frames - 1;
 	double* ryy = malloc(nPoint * sizeof(double));
-	//double* ryy0;;
+	
 	printf("Calculating FFT ryy\n");
 	fftw_complex* fftw_ryy = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
 	memset(fftw_ryy, 0, nPoint * sizeof(fftw_complex));
-	fftw_plan plan4 = fftw_plan_dft_r2c_1d(nPoint, sample_array, fftw_ryy,
-	FFTW_ESTIMATE);
-	fftw_execute(plan4);
-	fftw_destroy_plan(plan4);
+	fftw_plan plan1 = fftw_plan_dft_r2c_1d(nPoint, sample_array, fftw_ryy, FFTW_ESTIMATE);
+	fftw_execute(plan1);
+	fftw_destroy_plan(plan1);
 
 	//Take the complex conjugate of the complex array fftw_ryy
 	printf("Calculating the complex conjugate ryy\n");
-	fftw_complex* ryyConjugate = (fftw_complex*)fftw_malloc(nPoint *
-	sizeof(fftw_complex));
+	fftw_complex* ryyConjugate = (fftw_complex*)fftw_malloc(nPoint * sizeof(fftw_complex));
 	memset(ryyConjugate, 0, nPoint * sizeof(fftw_complex));
+	int i;
 	for (i = 0; i < nPoint; i++) {
 		ryyConjugate[i][0] = fftw_ryy[i][0];
 		ryyConjugate[i][1] = (-1) * fftw_ryy[i][1];
@@ -215,12 +152,13 @@ int main(int argc, char *argv[]) {
 		final_ryy[j][1] = fftw_ryy[j][0] * ryyConjugate[j][1] + fftw_ryy[j][1] * ryyConjugate[j][0];
 	}
 
-	//Take the inverse FFT and store in rxx.
+	//Take the inverse FFT and store in ryy.
 	printf("Calculating inverse FFT ryy\n");
-	fftw_plan plan5 = fftw_plan_dft_c2r_1d(nPoint, final_ryy, ryy,
-	FFTW_ESTIMATE);
-	fftw_execute(plan5);
-	fftw_destroy_plan(plan5);
+	fftw_plan plan2 = fftw_plan_dft_c2r_1d(nPoint, final_ryy, ryy, FFTW_ESTIMATE);
+	fftw_execute(plan2);
+	fftw_destroy_plan(plan2);
+
+	double ryy0 = round(ryy[0]);
 	
 
 	//Calculate the normalized cross correlation.
@@ -240,18 +178,18 @@ int main(int argc, char *argv[]) {
 	
 	fftw_complex* X = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(X, 0, lenCon * sizeof(fftw_complex));
-	fftw_plan plan6 = fftw_plan_dft_r2c_1d(lenCon, x_pad, X, FFTW_ESTIMATE);
-	fftw_execute(plan6);
-	fftw_destroy_plan(plan6);
+	fftw_plan plan3 = fftw_plan_dft_r2c_1d(lenCon, x_pad, X, FFTW_ESTIMATE);
+	fftw_execute(plan3);
+	fftw_destroy_plan(plan3);
 
 	fftw_complex* Y = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(Y, 0, lenCon * sizeof(fftw_complex));
-	fftw_plan plan7 = fftw_plan_dft_r2c_1d(lenCon, x_pad, Y, FFTW_ESTIMATE);
-	fftw_execute(plan7);
-	fftw_destroy_plan(plan7);
+	fftw_plan plan4 = fftw_plan_dft_r2c_1d(lenCon, y_pad, Y, FFTW_ESTIMATE);
+	fftw_execute(plan4);
+	fftw_destroy_plan(plan4);
 	
-	//Take the complex conjugate of the complex array fftw_ryy
-	printf("Calculating the complex conjugate ryy\n");
+	//Take the complex conjugate of the complex array Y
+	printf("Calculating the complex conjugate Y\n");
 	fftw_complex* yConjugate = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(yConjugate, 0, lenCon * sizeof(fftw_complex));
 	for (i = 0; i < lenCon; i++) {
@@ -259,24 +197,85 @@ int main(int argc, char *argv[]) {
 		yConjugate[i][1] = (-1) * Y[i][1];
 	}
 
-	
-	
+	//Array multiplication between the FFT of X and conjugate of FFT Y.
+	printf("Complex array multiplication X yConjugate\n");
+	fftw_complex* corrArray = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
+	memset(corrArray, 0, lenCon * sizeof(fftw_complex));
+	for (j = 0; j < lenCon; j++) {
+		corrArray[j][0] = X[j][0] * yConjugate[j][0] - X[j][1] * yConjugate[j][1];
+		corrArray[j][1] = X[j][0] * yConjugate[j][1] + X[j][1] * yConjugate[j][0];
+	}
+
+	//Take the inverse FFT and store in corr.
+	double* corr = malloc(lenCon * sizeof(double));
+	memset(corr, 0, lenCon * sizeof(double));
+	printf("Calculating inverse FFT corr\n");
+	fftw_plan plan5 = fftw_plan_dft_c2r_1d(lenCon, corrArray, corr, FFTW_ESTIMATE);
+	fftw_execute(plan5);
+	fftw_destroy_plan(plan5);
+
+	//Round values of corr.
+	for (j = 0; j < corrLength; j++) {
+		corr[j] = round(corr[j]);
+	}
+
+	int match = -1;
+	double max = -INFINITY;
+	printf("Determining location of closest match\n");
+	for (j = 0; j < lenCon; j++) {
+		if (corr[j] > max) {
+			match = j;
+			max = corr[j];
+		}
+	}
+	printf("Match Index: %d\n", match);
+	printf("Max: %lf\n", max);
+
+	//Remove matched signal
+	int size = mainInfo.frames - sampleInfo.frames;
+	double* new_sig = malloc(size * sizeof(double));
+	memset(new_sig, 0, size * sizeof(double));
+	printf("Creating new signal\n");
+	j = 0;
+	int range = match + sampleInfo.frames;
+	for (i = 0; i < mainInfo.frames; i++) {
+		if (i < match || i > range) {
+			new_sig[j] = main_array[i];
+			j = j + 1;
+		}
+	}
+
+
 	free(main_array);
 	free(sample_array);
-
-
-	//float_array is the array of floating point numbers needed to be used.
-
+	fftw_cleanup_threads();
 
 	//Write the data
-	//printf("Writing copy\n");
-	//SNDFILE* outfile;
-	//SF_INFO tmp;
-	//tmp.samplerate = sndInfo.samplerate;
+	printf("Writing copy\n");
+	SNDFILE* outfile;
+	SF_INFO tmp;
+	tmp.format = mainInfo.format;
+	tmp.channels = mainInfo.channels;
+	tmp.samplerate = mainInfo.samplerate;
+	
+	outfile = sf_open("output.wav", SFM_WRITE, &tmp);
+	if (outfile == NULL) {
+		printf("Error opening output file\n");
+		return 1;
+	}
 
-	//Write the data
-	//printf("Writing copy\n");
-	//SNDFILE* outfile;
-	//SF_INFO tmp;
-	//tmp.samplerate = sndInfo.samplerate;
+	// Write frames
+	printf("Writing data\n");
+	long writtenFrames = sf_writef_double(outfile, new_sig, size);
+
+	if (writtenFrames != size) {
+		printf("Did not write enough frames to output file.\n");
+		sf_close(outfile);
+		return 1;
+	}
+
+	sf_write_sync(outfile);
+	sf_close(outfile);
+
+	return 0;
 }
