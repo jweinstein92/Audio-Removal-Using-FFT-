@@ -115,14 +115,14 @@ int main(int argc, char *argv[]) {
 
 	//For threaded FFTW
 	fftw_init_threads();
-	fftw_plan_with_nthreads(32);
+	fftw_plan_with_nthreads(8);
 	
 	//Correlated Length
 	int corrLength = mainInfo.frames - sampleInfo.frames + 1;
 	int lenCon = pow(2, ceil(log2(mainInfo.frames + sampleInfo.frames - 1)));
 
-	//Calculate the normalized cross correlation.
-	printf("Calculate normalized cross correlation\n");
+	//Calculate the cross correlation.
+	printf("Calculate cross correlation\n");
 	double* x_pad = malloc(lenCon * sizeof(double));
 	memset(x_pad, 0, lenCon * sizeof(double));
 	double* y_pad = malloc(lenCon * sizeof(double));
