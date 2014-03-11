@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]) {
 	printf("Wav Read Test\n");
 	if (argc != 4) {
-		printf("Expected usage: ./threaded_cut source-file.wav sample-file.wav outputName\n");
+		printf("Expected usage: ./final source-file.wav sample-file.wav outputName\n");
 		return 1;
 	}
 
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Load data
-	double main_numFrames = sf_readf_double(mainFile, main_array, mainInfo.frames);
+	int main_numFrames = sf_readf_double(mainFile, main_array, mainInfo.frames);
 
 	//Check correct number of samples loaded
 	if (main_numFrames != mainInfo.frames) {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Output info
-	printf("Read %f frames from %s, Sample rate: %d, Length: %fs\n",
+	printf("Read %d frames from %s, Sample rate: %d, Length: %fs\n",
     	main_numFrames, argv[1], mainInfo.samplerate, (double)main_numFrames/mainInfo.samplerate);
 	sf_close(mainFile);
  
@@ -95,8 +95,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Load data
-	double sample_numFrames = sf_readf_double(sampleFile, sample_array,
-	sampleInfo.frames);
+	int sample_numFrames = sf_readf_double(sampleFile, sample_array, sampleInfo.frames);
 
 	//Check correct nuber of frames loaded
 	if (sample_numFrames != sampleInfo.frames) {
@@ -108,9 +107,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Output info
-	printf("Read %f frames from %s, Sample rate: %d, Length: %fs\n",
-	sample_numFrames, argv[2], sampleInfo.samplerate,
-	(double)sample_numFrames/sampleInfo.samplerate);
+	printf("Read %d frames from %s, Sample rate: %d, Length: %fs\n", sample_numFrames, argv[2], sampleInfo.samplerate, (double)sample_numFrames/sampleInfo.samplerate);
 	sf_close(sampleFile);
 
 	//For threaded FFTW
@@ -118,8 +115,8 @@ int main(int argc, char *argv[]) {
 	fftw_plan_with_nthreads(8);
 	
 	//Correlated Length
-	int corrLength = mainInfo.frames - sampleInfo.frames + 1;
-	int lenCon = pow(2, ceil(log2(mainInfo.frames + sampleInfo.frames - 1)));
+	int corrLength = main_numFrames - sample_numFrames + 1;
+	int lenCon = pow(2, ceil(log2(main_numFrames + sample_numFrames - 1)));
 
 	//Calculate the cross correlation.
 	printf("Calculate cross correlation\n");
@@ -129,25 +126,25 @@ int main(int argc, char *argv[]) {
 	memset(y_pad, 0, lenCon * sizeof(double));
 
 	int i;
-	for (i = 0; i < mainInfo.frames; i++) {
+	for (i = 0; i < main_numFrames; i++) {
 		x_pad[i] = main_array[i];
 	}
 
-	for (i = 0; i < sampleInfo.frames; i++) {
+	for (i = 0; i < sample_numFrames; i++) {
 		y_pad[i] = sample_array[i];
 	}
 	
 	fftw_complex* X = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(X, 0, lenCon * sizeof(fftw_complex));
-	fftw_plan plan3 = fftw_plan_dft_r2c_1d(lenCon, x_pad, X, FFTW_ESTIMATE);
-	fftw_execute(plan3);
-	fftw_destroy_plan(plan3);
+	fftw_plan plan1 = fftw_plan_dft_r2c_1d(lenCon, x_pad, X, FFTW_ESTIMATE);
+	fftw_execute(plan1);
+	fftw_destroy_plan(plan1);
 
 	fftw_complex* Y = (fftw_complex*)fftw_malloc(lenCon * sizeof(fftw_complex));
 	memset(Y, 0, lenCon * sizeof(fftw_complex));
-	fftw_plan plan4 = fftw_plan_dft_r2c_1d(lenCon, y_pad, Y, FFTW_ESTIMATE);
-	fftw_execute(plan4);
-	fftw_destroy_plan(plan4);
+	fftw_plan plan2 = fftw_plan_dft_r2c_1d(lenCon, y_pad, Y, FFTW_ESTIMATE);
+	fftw_execute(plan2);
+	fftw_destroy_plan(plan2);
 	
 	//Take the complex conjugate of the complex array Y
 	printf("Calculating the complex conjugate Y\n");
@@ -172,16 +169,16 @@ int main(int argc, char *argv[]) {
 	double* corr = malloc(lenCon * sizeof(double));
 	memset(corr, 0, lenCon * sizeof(double));
 	printf("Calculating inverse FFT corr\n");
-	fftw_plan plan5 = fftw_plan_dft_c2r_1d(lenCon, corrArray, corr, FFTW_ESTIMATE);
-	fftw_execute(plan5);
-	fftw_destroy_plan(plan5);
+	fftw_plan plan3 = fftw_plan_dft_c2r_1d(lenCon, corrArray, corr, FFTW_ESTIMATE);
+	fftw_execute(plan3);
+	fftw_destroy_plan(plan3);
 
 	//Round values of corr.
 	for (j = 0; j < corrLength; j++) {
 		corr[j] = round(corr[j]);
 	}
 
-	int match = -1;
+	int match = 0;
 	double max = -INFINITY;
 	printf("Determining location of closest match\n");
 	for (j = 0; j < lenCon; j++) {
@@ -194,13 +191,13 @@ int main(int argc, char *argv[]) {
 	printf("Max: %lf\n", max);
 
 	//Remove matched signal
-	int size = mainInfo.frames - sampleInfo.frames;
+	int size = main_numFrames - sample_numFrames;
 	double* new_sig = malloc(size * sizeof(double));
 	memset(new_sig, 0, size * sizeof(double));
 	printf("Creating new signal\n");
 	j = 0;
-	int range = match + sampleInfo.frames;
-	for (i = 0; i < mainInfo.frames; i++) {
+	int range = match + sample_numFrames;
+	for (i = 0; i < main_numFrames; i++) {
 		if (i < match || i > range) {
 			new_sig[j] = main_array[i];
 			j = j + 1;
@@ -231,7 +228,7 @@ int main(int argc, char *argv[]) {
 
 	// Write frames
 	printf("Writing data\n");
-	long writtenFrames = sf_writef_double(outfile, new_sig, size);
+	int writtenFrames = sf_writef_double(outfile, new_sig, size);
 
 	if (writtenFrames != size) {
 		printf("Did not write enough frames to output file.\n");
